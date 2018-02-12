@@ -1,26 +1,26 @@
 //Joshua Murray, Aaron Baker & Brian Hoffman
 #include <MsTimer2.h>
-#define UNIT 1//change this depending on which unit you are programming
-//#define UNIT 2
-//#define UNIT 3
+#include <EEPROM.h>
+#define UNIT_MEMORY_LOCATION 0
 #define X_INPUT 0
-#define Y_INPUT 1
-#define Z_INPUT 2
-#define L_INPUT 3
 //comms
-#define UNK 'A'
+#define START 'R'
+#define SYNC 'S'
+#define STOP 'T'
 
-
+int unit;
 char cmd;
 bool toggle;
+unsigned long timeVal;
 
 void setup() {
+  unit = EEPROM.read(UNIT_MEMORY_LOCATION);
+  timeVal = 0;
   pinMode(13, OUTPUT);
+  pinMode(1, INPUT);
   digitalWrite(13, LOW);
-  MsTimer2::set(1000, sendValues);
-  MsTimer2::start();
+  MsTimer2::set(100, sendValues);
   Serial.begin(57600);
-  Serial.setTimeout(10);
   Serial.flush();
 }
 
@@ -31,14 +31,22 @@ void sendValues() {
     digitalWrite(13, LOW);    
   }
   toggle = !toggle;
-  Serial.print("Unit:");Serial.print(UNIT);Serial.print(", TEST:");Serial.println(millis());
+  Serial.print("ID:");Serial.print(unit);Serial.print(", ");Serial.print(timeVal);Serial.print(", ");Serial.println(analogRead(1));
+  timeVal++;
 }
 
 void loop() {
   if(Serial.available()) {
     cmd = Serial.read();
     switch (cmd) {
-      case UNK:
+      case START:
+        MsTimer2::start();
+        break;
+      case SYNC:
+        timeVal = 0;
+        break;
+      case STOP:
+        MsTimer2::stop();
         break;
       default:
           Serial.print("==========");Serial.print(cmd);Serial.println(" is an unkown command==============");
