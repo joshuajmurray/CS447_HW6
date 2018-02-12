@@ -14,25 +14,26 @@ bool toggle;
 unsigned long timeVal;
 
 void setup() {
-  unit = EEPROM.read(UNIT_MEMORY_LOCATION);
-  timeVal = 0;
-  pinMode(13, OUTPUT);
-  pinMode(1, INPUT);
-  digitalWrite(13, LOW);
-  MsTimer2::set(100, sendValues);
+  unit = EEPROM.read(UNIT_MEMORY_LOCATION);//EEPROM is programmed seperately with UNIT IDs
+  timeVal = 0;//timestamp
+  toggle = false;
+  pinMode(13, OUTPUT);//LED for visual sync
+  pinMode(1, INPUT);//Sensor input
+  digitalWrite(13, LOW);//LED for visual sync
+  MsTimer2::set(100, sendValues);//10hz
   Serial.begin(57600);
   Serial.flush();
 }
 
-void sendValues() {
-  if(toggle){
+void sendValues() {//ISR
+  if(toggle){//toggle LED for visual sync
     digitalWrite(13, HIGH);
   } else {
     digitalWrite(13, LOW);    
   }
   toggle = !toggle;
   Serial.print("ID:");Serial.print(unit);Serial.print(", ");Serial.print(timeVal);Serial.print(", ");Serial.println(analogRead(1));
-  timeVal++;
+  timeVal++;//increment timer
 }
 
 void loop() {
@@ -43,7 +44,9 @@ void loop() {
         MsTimer2::start();
         break;
       case SYNC:
+        MsTimer2::stop();
         timeVal = 0;
+        MsTimer2::start();
         break;
       case STOP:
         MsTimer2::stop();
